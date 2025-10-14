@@ -20,9 +20,16 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Handle both GET and POST requests
 async function handleSearch(query, limit, res) {
   try {
+    console.log('Search query:', query);
+    console.log('Environment check:', {
+      hasApiKey: !!API_KEY,
+      baseId: BASE_ID,
+      table: TABLE,
+      view: VIEW
+    });
+
     if (!query) {
       return res.send(`
         <html>
@@ -43,15 +50,23 @@ async function handleSearch(query, limit, res) {
     let url = `https://api.airtable.com/v0/${BASE_ID}/${encodeURIComponent(TABLE)}`;
     if (VIEW) url += `?view=${encodeURIComponent(VIEW)}`;
 
+    console.log('Fetching from Airtable:', url);
+
     const response = await fetch(url, {
       headers: { 'Authorization': `Bearer ${API_KEY}` }
     });
 
+    console.log('Airtable response status:', response.status);
+
     if (!response.ok) {
-      throw new Error('Airtable API error');
+      const errorText = await response.text();
+      console.error('Airtable error response:', errorText);
+      throw new Error(`Airtable API error (${response.status}): ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('Records fetched:', data.records?.length || 0);
+    
     const items = data.records.map(r => ({ id: r.id, ...r.fields }));
     
     if (items.length === 0) {
@@ -65,7 +80,7 @@ async function handleSearch(query, limit, res) {
           </head>
           <body>
             <h1>No opportunities found in database</h1>
-            <p>The database appears to be empty.</p>
+            <p>The database appears to be empty or the view has no records.</p>
           </body>
         </html>
       `);
@@ -205,27 +220,29 @@ async function handleSearch(query, limit, res) {
       <html>
         <head>
           <style>
-            body { font-family: Arial, sans-serif; max-width: 600px; margin: 100px auto; text-align: center; }
-            .error { color: #d32f2f; }
+            body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
+            .error { color: #d32f2f; background: #ffebee; padding: 20px; border-radius: 8px; }
+            pre { background: #f5f5f5; padding: 15px; overflow: auto; }
           </style>
         </head>
         <body>
-          <h1 class="error">Error</h1>
-          <p>${error.message}</p>
+          <div class="error">
+            <h1>Error</h1>
+            <p>${error.message}</p>
+            <pre>${error.stack}</pre>
+          </div>
         </body>
       </html>
     `);
   }
 }
 
-// GET endpoint for URL parameters
 app.get('/search', async (req, res) => {
   const query = req.query.query || req.query.q || req.query.keyword || '';
   const limit = parseInt(req.query.limit) || 10;
   await handleSearch(query, limit, res);
 });
 
-// POST endpoint for API calls
 app.post('/search', async (req, res) => {
   const query = req.body.query || '';
   const limit = req.body.limit || 10;
