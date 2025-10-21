@@ -291,6 +291,7 @@ This project is licensed under the MIT License.
 ## 👥 Authors
 
 - **Sharon Wanyana** - Office of Research, American University
+- **LinkedIn** - www.linkedin.com/in/sharonwanyana
 
 ## 🙏 Acknowledgments
 
@@ -304,7 +305,7 @@ For questions or issues:
 1. Check the Troubleshooting section above
 2. Review Vercel logs for error details
 3. Open an issue on GitHub
-4. Contact the Office of Research
+4. Email: sw1026a@american.edu
 
 ## 🔗 Related Links
 
