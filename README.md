@@ -68,7 +68,7 @@ The following environment variables must be set in Vercel:
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `AIRTABLE_API_KEY` | Airtable Personal Access Token | `patXXXXXXXXXXXX` |
-| `AIRTABLE_BASE_ID` | Airtable Base ID | `appQknghmnGQf1IgO` |
+| `AIRTABLE_BASE_ID` | Airtable Base ID | `app**************` |
 | `AIRTABLE_TABLE_NAME` | Table name in Airtable | `FundingAnnouncements` |
 | `AIRTABLE_VIEW_NAME` | (Optional) Specific view to query | `Public API View` |
 | `ALLOWED_FIELDS` | (Optional) Comma-separated field whitelist | `Opportunity,Funder,Amount` |
