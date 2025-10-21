@@ -129,7 +129,19 @@ app.post('/search', async (req, res) => {
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+// GET endpoint for URL parameters
+app.get('/search', async (req, res) => {
+  const query = req.query.query || req.query.q || req.query.keyword || '';
+  const limit = parseInt(req.query.limit) || 10;
+  await handleSearch(query, limit, res);
+});
 
+// POST endpoint for API calls
+app.post('/search', async (req, res) => {
+  const query = req.body.query || '';
+  const limit = req.body.limit || 10;
+  await handleSearch(query, limit, res);
+});
 // Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
