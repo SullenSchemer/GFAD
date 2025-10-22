@@ -20,26 +20,10 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-async function handleSearch(query, limit, res) {
+async function handleSearch(query, limit, res, filters = {}) {
   try {
     console.log('Search query:', query);
-
-    if (!query) {
-      return res.send(`
-        <html>
-          <head>
-            <style>
-              body { font-family: Arial, sans-serif; max-width: 600px; margin: 100px auto; text-align: center; }
-              .error { color: #d32f2f; }
-            </style>
-          </head>
-          <body>
-            <h1 class="error">No search query provided</h1>
-            <p>Please go back and enter a search term.</p>
-          </body>
-        </html>
-      `);
-    }
+    console.log('Filters:', filters);
 
     let url = `https://api.airtable.com/v0/${BASE_ID}/${encodeURIComponent(TABLE)}`;
     if (VIEW) url += `?view=${encodeURIComponent(VIEW)}`;
@@ -61,7 +45,17 @@ async function handleSearch(query, limit, res) {
     const data = await response.json();
     console.log('Records fetched:', data.records?.length || 0);
     
-    const items = data.records.map(r => ({ id: r.id, ...r.fields }));
+    let items = data.records.map(r => ({ id: r.id, ...r.fields }));
+    
+    // Filter by deadline if provided (show opportunities with deadline on or after the search date)
+    if (filters.deadline) {
+      const searchDeadline = new Date(filters.deadline);
+      items = items.filter(item => {
+        if (!item.Deadline) return false;
+        const itemDeadline = new Date(item.Deadline);
+        return itemDeadline >= searchDeadline;
+      });
+    }
     
     if (items.length === 0) {
       return res.send(`
@@ -70,24 +64,48 @@ async function handleSearch(query, limit, res) {
             <style>
               body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
               h1 { color: #333; }
+              .button { 
+                display: inline-block; 
+                margin-top: 20px; 
+                padding: 12px 24px; 
+                background: #d32f2f; 
+                color: white; 
+                text-decoration: none; 
+                border-radius: 6px; 
+              }
             </style>
           </head>
           <body>
-            <h1>No opportunities found in database</h1>
-            <p>The database appears to be empty or the view has no records.</p>
+            <h1>No opportunities found</h1>
+            <p>No opportunities match your search criteria. Try adjusting your filters.</p>
+            <a href="https://www.jotform.com/form/252758211486058" class="button">← New Search</a>
           </body>
         </html>
       `);
     }
     
-    const fuse = new Fuse(items, {
-      keys: Object.keys(items[0] || {}).filter(k => k !== 'id'),
-      threshold: 0.4,
-      includeScore: true
-    });
-    
-    const results = fuse.search(query).slice(0, limit);
-    const output = results.map(r => ({ score: r.score, ...r.item }));
+    // Perform fuzzy search if query provided
+    let output;
+    if (query) {
+      const fuse = new Fuse(items, {
+        keys: Object.keys(items[0] || {}).filter(k => k !== 'id'),
+        threshold: 0.4,
+        includeScore: true
+      });
+      
+      const results = fuse.search(query).slice(0, limit);
+      output = results.map(r => ({ score: r.score, ...r.item }));
+    } else {
+      // If only deadline filter (no search query), return filtered items
+      output = items.slice(0, limit).map(item => ({ score: 0, ...item }));
+    }
+
+    // Build filter summary for display
+    let filterSummary = [];
+    if (filters.keyword) filterSummary.push(`Keywords: "${filters.keyword}"`);
+    if (filters.discipline && filters.discipline !== 'All Disciplines') filterSummary.push(`Discipline: ${filters.discipline}`);
+    if (filters.funder) filterSummary.push(`Funder: "${filters.funder}"`);
+    if (filters.deadline) filterSummary.push(`Deadline after: ${new Date(filters.deadline).toLocaleDateString()}`);
 
     const responseHtml = `
       <!DOCTYPE html>
@@ -95,7 +113,7 @@ async function handleSearch(query, limit, res) {
         <head>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1">
-          <title>Search Results - ${query}</title>
+          <title>Search Results</title>
           <style>
             body { 
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
@@ -112,7 +130,7 @@ async function handleSearch(query, limit, res) {
               text-align: center;
             }
             h1 { margin: 0; font-size: 28px; }
-            .subtitle { margin-top: 10px; opacity: 0.9; }
+            .subtitle { margin-top: 10px; opacity: 0.9; font-size: 14px; }
             .search-again {
               display: inline-block;
               background: white;
@@ -169,12 +187,6 @@ async function handleSearch(query, limit, res) {
             .link:hover {
               text-decoration: underline;
             }
-            .no-results {
-              text-align: center;
-              padding: 60px 20px;
-              background: white;
-              border-radius: 8px;
-            }
             .match-score {
               display: inline-block;
               background: #e3f2fd;
@@ -184,42 +196,51 @@ async function handleSearch(query, limit, res) {
               font-size: 12px;
               font-weight: 600;
             }
+            .filters {
+              background: #fff3e0;
+              padding: 15px;
+              border-radius: 6px;
+              margin-bottom: 20px;
+              font-size: 14px;
+            }
+            .filters strong {
+              color: #e65100;
+            }
           </style>
         </head>
         <body>
           <div class="header">
             <h1>🔍 Funding Opportunities</h1>
-            <div class="subtitle">Search results for "${query}"</div>
+            <div class="subtitle">Search Results</div>
             <a href="https://www.jotform.com/form/252758211486058" class="search-again">← New Search</a>
           </div>
           
-          ${output.length === 0 ? `
-            <div class="no-results">
-              <h2>No matching opportunities found</h2>
-              <p>Try different search terms or browse all opportunities.</p>
+          ${filterSummary.length > 0 ? `
+            <div class="filters">
+              <strong>Filters applied:</strong> ${filterSummary.join(' • ')}
             </div>
-          ` : `
-            <p style="color: #666; margin-bottom: 20px;">
-              <strong>${output.length}</strong> matching opportunit${output.length === 1 ? 'y' : 'ies'} found
-            </p>
-            ${output.map(r => {
-              const matchScore = ((1 - r.score) * 100).toFixed(0);
-              return `
-                <div class="result">
-                  <div class="title">${r.Opportunity || 'Untitled Opportunity'}</div>
-                  <div class="meta">
-                    <span class="match-score">${matchScore}% match</span>
-                  </div>
-                  ${r.Funder ? `<div class="meta"><span class="label">Funder:</span> ${r.Funder}</div>` : ''}
-                  ${r.Amount ? `<div class="meta"><span class="label">Amount:</span> $${typeof r.Amount === 'number' ? r.Amount.toLocaleString() : r.Amount}</div>` : ''}
-                  ${r.Deadline ? `<div class="meta"><span class="label">Deadline:</span> ${new Date(r.Deadline).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>` : ''}
-                  ${r['Type of Funder'] && typeof r['Type of Funder'] === 'string' ? `<div class="meta"><span class="label">Type:</span> ${r['Type of Funder']}</div>` : ''}
-                  ${r.Summary ? `<div class="summary">${r.Summary}</div>` : ''}
-                  ${r['Opportunity Link'] ? `<a href="${r['Opportunity Link']}" target="_blank" class="link" rel="noopener noreferrer">View Full Details →</a>` : ''}
-                </div>
-              `;
-            }).join('')}
-          `}
+          ` : ''}
+          
+          <p style="color: #666; margin-bottom: 20px;">
+            <strong>${output.length}</strong> matching opportunit${output.length === 1 ? 'y' : 'ies'} found
+          </p>
+          
+          ${output.map(r => {
+            const matchScore = query ? ((1 - r.score) * 100).toFixed(0) : '100';
+            return `
+              <div class="result">
+                <div class="title">${r.Opportunity || 'Untitled Opportunity'}</div>
+                ${query ? `<div class="meta"><span class="match-score">${matchScore}% match</span></div>` : ''}
+                ${r.Funder ? `<div class="meta"><span class="label">Funder:</span> ${r.Funder}</div>` : ''}
+                ${r.Amount ? `<div class="meta"><span class="label">Amount:</span> $${typeof r.Amount === 'number' ? r.Amount.toLocaleString() : r.Amount}</div>` : ''}
+                ${r.Deadline ? `<div class="meta"><span class="label">Deadline:</span> ${new Date(r.Deadline).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>` : ''}
+                ${r.Discipline && typeof r.Discipline === 'string' ? `<div class="meta"><span class="label">Discipline:</span> ${r.Discipline}</div>` : ''}
+                ${r['Type of Funder'] && typeof r['Type of Funder'] === 'string' ? `<div class="meta"><span class="label">Type:</span> ${r['Type of Funder']}</div>` : ''}
+                ${r.Summary ? `<div class="summary">${r.Summary}</div>` : ''}
+                ${r['Opportunity Link'] ? `<a href="${r['Opportunity Link']}" target="_blank" class="link" rel="noopener noreferrer">View Full Details →</a>` : ''}
+              </div>
+            `;
+          }).join('')}
         </body>
       </html>
     `;
@@ -247,9 +268,51 @@ async function handleSearch(query, limit, res) {
 }
 
 app.get('/search', async (req, res) => {
-  const query = req.query.query || req.query.q || req.query.keyword || '';
+  const keyword = req.query.keyword || '';
+  const discipline = req.query.discipline || '';
+  const funder = req.query.funder || '';
+  const deadline = req.query.deadline || '';
   const limit = parseInt(req.query.limit) || 10;
-  await handleSearch(query, limit, res);
+  
+  // Build search query from all provided fields
+  let searchTerms = [];
+  if (keyword) searchTerms.push(keyword);
+  if (discipline && discipline !== 'All Disciplines') {
+    searchTerms.push(discipline);
+  }
+  if (funder) searchTerms.push(funder);
+  
+  const searchQuery = searchTerms.join(' ').trim();
+  
+  // If no search criteria provided at all
+  if (!searchQuery && !deadline) {
+    return res.send(`
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; max-width: 600px; margin: 100px auto; text-align: center; }
+            .error { color: #d32f2f; }
+            .button { 
+              display: inline-block; 
+              margin-top: 20px; 
+              padding: 12px 24px; 
+              background: #d32f2f; 
+              color: white; 
+              text-decoration: none; 
+              border-radius: 6px; 
+            }
+          </style>
+        </head>
+        <body>
+          <h1 class="error">No search criteria provided</h1>
+          <p>Please provide at least one search term, discipline, funder, or deadline.</p>
+          <a href="https://www.jotform.com/form/252758211486058" class="button">← Back to Search</a>
+        </body>
+      </html>
+    `);
+  }
+  
+  await handleSearch(searchQuery, limit, res, { deadline, discipline, funder, keyword });
 });
 
 app.post('/search', async (req, res) => {
