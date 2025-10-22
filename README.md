@@ -34,7 +34,13 @@ This project provides a search interface for the "Funding Announcements" databas
 
 ## 🚀 Features
 
+- **Flexible Search Options** - Search by keyword, discipline, funder, deadline, or any combination
 - **Fuzzy Search** - Finds relevant results even with typos or partial matches
+- **Multiple Filters** - Combine multiple criteria for precise results:
+  - Keyword search across all fields
+  - Discipline filter (Science, Arts & Humanities, Business, Social Sciences, Law, Education)
+  - Funder name search
+  - Deadline filtering (show opportunities after a specific date)
 - **Real-time Results** - Instant search results displayed in a clean interface
 - **Match Scoring** - Shows relevance percentage for each result
 - **Secure Data Access** - Only exposes approved fields from Airtable
@@ -68,7 +74,7 @@ The following environment variables must be set in Vercel:
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `AIRTABLE_API_KEY` | Airtable Personal Access Token | `patXXXXXXXXXXXX` |
-| `AIRTABLE_BASE_ID` | Airtable Base ID | `appXXXXXXXXXX` |
+| `AIRTABLE_BASE_ID` | Airtable Base ID | `appXXXXXXXXXXXXXX` |
 | `AIRTABLE_TABLE_NAME` | Table name in Airtable | `FundingAnnouncements` |
 | `AIRTABLE_VIEW_NAME` | (Optional) Specific view to query | `Public API View` |
 | `ALLOWED_FIELDS` | (Optional) Comma-separated field whitelist | `Opportunity,Funder,Amount` |
@@ -151,19 +157,32 @@ Health check endpoint.
 ```
 
 ### `GET /search`
-Search for funding opportunities.
+Search for funding opportunities with flexible filtering.
 
 **Parameters:**
-- `query` (required) - Search term
+- `keyword` (optional) - Search term for fuzzy matching
+- `discipline` (optional) - Filter by discipline: "Science", "Arts & Humanities", "Business", "Social Sciences", "Law", "Education", or "All Disciplines"
+- `funder` (optional) - Search by funder name
+- `deadline` (optional) - Filter opportunities with deadline on or after this date (YYYY-MM-DD format)
 - `limit` (optional) - Number of results (default: 10)
 
-**Example:**
+**Examples:**
 ```
-https://gfad.vercel.app/search?query=stem&limit=5
+# Keyword only
+https://gfad.vercel.app/search?keyword=stem
+
+# Discipline only
+https://gfad.vercel.app/search?discipline=Science
+
+# Multiple filters
+https://gfad.vercel.app/search?keyword=research&discipline=Science&deadline=2025-12-31
+
+# All filters combined
+https://gfad.vercel.app/search?keyword=innovation&discipline=Business&funder=National&deadline=2026-01-01
 ```
 
 **Response:**
-Returns an HTML page with formatted search results.
+Returns an HTML page with formatted search results showing applied filters and matching opportunities.
 
 ### `POST /search`
 Alternative POST endpoint for programmatic access.
@@ -191,16 +210,39 @@ const fuseOptions = {
 };
 ```
 
+### Add/Modify Discipline Options
+
+In Jotform:
+1. Go to the Discipline dropdown field
+2. Edit Options
+3. Add or remove disciplines as needed
+
+### Customize Deadline Filtering
+
+By default, the system shows opportunities with deadlines **on or after** the selected date. To change this behavior, modify the deadline filter in `handleSearch()`:
+
+```javascript
+// Show opportunities BEFORE a date (instead of after)
+if (filters.deadline) {
+  const searchDeadline = new Date(filters.deadline);
+  items = items.filter(item => {
+    if (!item.Deadline) return false;
+    const itemDeadline = new Date(item.Deadline);
+    return itemDeadline <= searchDeadline;  // Change >= to <=
+  });
+}
+```
+
 ### Customize Results Page
 
 Modify the HTML template in the `handleSearch` function:
 
 ```javascript
 const responseHtml = `
-  <!DOCTYPE html>
-  <html>
-    <!-- Customize the HTML here -->
-  </html>
+  
+  
+    
+  
 `;
 ```
 
@@ -269,12 +311,17 @@ Potential improvements:
 
 - [ ] Add search history/analytics
 - [ ] Implement result caching for faster responses
-- [ ] Add filters (by funder type, amount range, deadline)
+- [ ] Add amount range filter (e.g., $10,000 - $50,000)
+- [x] ~~Add discipline filter~~ ✅ Completed
+- [x] ~~Add deadline filter~~ ✅ Completed
+- [x] ~~Add funder search~~ ✅ Completed
 - [ ] Create admin dashboard for search analytics
 - [ ] Add email notifications for new opportunities
 - [ ] Implement saved searches/favorites
 - [ ] Add export to CSV functionality
 - [ ] Multi-language support
+- [ ] Add eligibility filter
+- [ ] Combine multiple Airtable bases
 
 ## 🤝 Contributing
 
@@ -291,7 +338,6 @@ This project is licensed under the MIT License.
 ## 👥 Authors
 
 - **Sharon Wanyana** - Office of Research, American University
-- **LinkedIn** - www.linkedin.com/in/sharonwanyana
 
 ## 🙏 Acknowledgments
 
@@ -305,7 +351,7 @@ For questions or issues:
 1. Check the Troubleshooting section above
 2. Review Vercel logs for error details
 3. Open an issue on GitHub
-4. Email: sw1026a@american.edu
+4. Email: sw1026a@american.edu/ LinkedIn:www.linkedin.com/in/sharonwanyana 
 
 ## 🔗 Related Links
 
@@ -317,5 +363,22 @@ For questions or issues:
 ---
 
 **Last Updated:** October 2025  
-**Version:** 1.0.0  
+**Version:** 2.0.0  
 **Status:** ✅ Production Ready
+
+## 🆕 Version History
+
+### v2.0.0 (October 2025)
+- ✨ Added multi-field search (keyword, discipline, funder, deadline)
+- ✨ Added discipline dropdown with 6 categories
+- ✨ Added deadline filtering
+- ✨ Added filter summary display in results
+- 🎨 Improved results page with filter indicators
+- 📝 Updated documentation
+
+### v1.0.0 (October 2025)
+- 🚀 Initial release
+- ✅ Basic fuzzy search functionality
+- ✅ Jotform integration
+- ✅ Airtable connection
+- ✅ Vercel deployment
