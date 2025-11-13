@@ -27,84 +27,102 @@ app.get('/', (req, res) => {
         <title>Funding Opportunities Search API</title>
         <style>
           body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f0f4f8;
             margin: 0;
             padding: 0;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+          }
+          .header {
+            background: #0c4b7a;
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
           }
           .container {
             background: white;
-            padding: 50px;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            max-width: 600px;
-            text-align: center;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
           }
           h1 { 
-            color: #333;
-            margin: 0 0 10px 0;
+            color: white;
+            margin: 0 0 15px 0;
             font-size: 32px;
+            font-weight: 600;
           }
           .subtitle {
-            color: #666;
-            margin-bottom: 30px;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 20px;
             font-size: 16px;
+            line-height: 1.6;
           }
           .status {
             display: inline-block;
-            background: #4caf50;
+            background: rgba(255,255,255,0.2);
             color: white;
-            padding: 6px 14px;
+            padding: 8px 16px;
             border-radius: 20px;
             font-size: 14px;
             font-weight: 600;
-            margin-bottom: 30px;
+            margin-top: 10px;
+            border: 1px solid rgba(255,255,255,0.3);
           }
           .button {
             display: inline-block;
-            margin: 10px;
-            padding: 16px 32px;
-            background: #d32f2f;
+            margin: 20px 10px;
+            padding: 14px 32px;
+            background: #0c4b7a;
             color: white;
             text-decoration: none;
-            border-radius: 8px;
+            border-radius: 6px;
             font-weight: 600;
             transition: all 0.3s;
             font-size: 16px;
           }
           .button:hover {
-            background: #b71c1c;
+            background: #094063;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(211,47,47,0.4);
+            box-shadow: 0 4px 12px rgba(12,75,122,0.3);
+          }
+          .content {
+            text-align: center;
+            padding: 20px 0;
+          }
+          .content p {
+            color: #555;
+            line-height: 1.8;
+            font-size: 15px;
           }
           .endpoints {
             margin-top: 40px;
             padding-top: 30px;
-            border-top: 2px solid #f0f0f0;
+            border-top: 2px solid #e8eef3;
             text-align: left;
           }
           .endpoints h3 {
-            color: #333;
-            margin-bottom: 15px;
+            color: #0c4b7a;
+            margin-bottom: 20px;
+            font-size: 20px;
           }
           .endpoint {
-            background: #f8f9fa;
-            padding: 12px 16px;
-            margin: 8px 0;
+            background: #f8fafc;
+            padding: 14px 18px;
+            margin: 10px 0;
             border-radius: 6px;
             font-family: 'Courier New', monospace;
             font-size: 14px;
             color: #495057;
+            border-left: 3px solid #0c4b7a;
           }
           .method {
             display: inline-block;
-            background: #667eea;
+            background: #0c4b7a;
             color: white;
-            padding: 3px 8px;
+            padding: 4px 10px;
             border-radius: 4px;
             font-weight: 600;
             margin-right: 10px;
@@ -113,22 +131,29 @@ app.get('/', (req, res) => {
         </style>
       </head>
       <body>
+        <div class="header">
+          <h1>🔍 Funding Opportunities Search</h1>
+          <div class="subtitle">
+            Complete one or more of the filters below to search our database and find research opportunities that match your interests.
+          </div>
+          <div class="status">✓ API Online</div>
+        </div>
+        
         <div class="container">
-          <h1>🔍 Funding Opportunities</h1>
-          <div class="subtitle">Search API Service</div>
-          <div class="status">✓ Online</div>
-          
-          <p style="color: #666; line-height: 1.6;">
-            Welcome to the Funding Opportunities Search API. 
-            Use the button below to access the search interface.
-          </p>
-          
-          <a href="https://www.jotform.com/form/252758211486058" class="button">
-            Start Searching →
-          </a>
+          <div class="content">
+            <p>
+              Welcome to the Funding Opportunities Search API service. 
+              This API powers the funding opportunities search system and provides access to 
+              comprehensive research funding data.
+            </p>
+            
+            <a href="https://www.jotform.com/form/252758211486058" class="button">
+              Start Searching →
+            </a>
+          </div>
           
           <div class="endpoints">
-            <h3>API Endpoints</h3>
+            <h3>Available API Endpoints</h3>
             <div class="endpoint">
               <span class="method">GET</span> /health
             </div>
@@ -197,7 +222,7 @@ async function handleSearch(query, limit, res, filters = {}) {
                 display: inline-block; 
                 margin-top: 20px; 
                 padding: 12px 24px; 
-                background: #d32f2f; 
+                background: #0c4b7a; 
                 color: white; 
                 text-decoration: none; 
                 border-radius: 6px; 
@@ -245,25 +270,26 @@ async function handleSearch(query, limit, res, filters = {}) {
           <title>Search Results</title>
           <style>
             body { 
-              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+              font-family: Arial, Helvetica, sans-serif;
               max-width: 900px; 
               margin: 0 auto; 
               padding: 20px;
-              background: #f5f5f5;
+              background: #f0f4f8;
             }
             .header {
-              background: #d32f2f;
+              background: #0c4b7a;
               color: white;
               padding: 30px;
               margin: -20px -20px 30px -20px;
               text-align: center;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             }
-            h1 { margin: 0; font-size: 28px; }
+            h1 { margin: 0; font-size: 28px; font-weight: 600; }
             .subtitle { margin-top: 10px; opacity: 0.9; font-size: 14px; }
             .search-again {
               display: inline-block;
               background: white;
-              color: #d32f2f;
+              color: #0c4b7a;
               padding: 12px 24px;
               border: 2px solid white;
               border-radius: 6px;
@@ -282,11 +308,11 @@ async function handleSearch(query, limit, res, filters = {}) {
               background: white;
               border-radius: 8px;
               box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-              border-left: 4px solid #d32f2f;
+              border-left: 4px solid #0c4b7a;
             }
             .title { 
               font-weight: bold; 
-              color: #d32f2f;
+              color: #0c4b7a;
               font-size: 18px;
               margin-bottom: 10px;
             }
@@ -319,7 +345,7 @@ async function handleSearch(query, limit, res, filters = {}) {
             .match-score {
               display: inline-block;
               background: #e3f2fd;
-              color: #1976d2;
+              color: #0c4b7a;
               padding: 4px 10px;
               border-radius: 4px;
               font-size: 12px;
@@ -381,8 +407,8 @@ async function handleSearch(query, limit, res, filters = {}) {
       <html>
         <head>
           <style>
-            body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
-            .error { color: #d32f2f; background: #ffebee; padding: 20px; border-radius: 8px; }
+            body { font-family: Arial, Helvetica, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
+            .error { color: #0c4b7a; background: #e3f2fd; padding: 20px; border-radius: 8px; border-left: 4px solid #0c4b7a; }
           </style>
         </head>
         <body>
@@ -419,13 +445,13 @@ app.get('/search', async (req, res) => {
       <html>
         <head>
           <style>
-            body { font-family: Arial, sans-serif; max-width: 600px; margin: 100px auto; text-align: center; }
-            .error { color: #d32f2f; }
+            body { font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 100px auto; text-align: center; }
+            .error { color: #0c4b7a; }
             .button { 
               display: inline-block; 
               margin-top: 20px; 
               padding: 12px 24px; 
-              background: #d32f2f; 
+              background: #0c4b7a; 
               color: white; 
               text-decoration: none; 
               border-radius: 6px; 
@@ -457,3 +483,5 @@ app.listen(port, () => {
 });
 
 export default app;
+
+
