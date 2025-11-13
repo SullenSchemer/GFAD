@@ -16,6 +16,135 @@ const BASE_ID = process.env.AIRTABLE_BASE_ID;
 const TABLE = process.env.AIRTABLE_TABLE_NAME;
 const VIEW = process.env.AIRTABLE_VIEW_NAME;
 
+// ROOT ROUTE - This was missing!
+app.get('/', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Funding Opportunities Search API</title>
+        <style>
+          body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .container {
+            background: white;
+            padding: 50px;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            text-align: center;
+          }
+          h1 { 
+            color: #333;
+            margin: 0 0 10px 0;
+            font-size: 32px;
+          }
+          .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+          }
+          .status {
+            display: inline-block;
+            background: #4caf50;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 30px;
+          }
+          .button {
+            display: inline-block;
+            margin: 10px;
+            padding: 16px 32px;
+            background: #d32f2f;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 16px;
+          }
+          .button:hover {
+            background: #b71c1c;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(211,47,47,0.4);
+          }
+          .endpoints {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 2px solid #f0f0f0;
+            text-align: left;
+          }
+          .endpoints h3 {
+            color: #333;
+            margin-bottom: 15px;
+          }
+          .endpoint {
+            background: #f8f9fa;
+            padding: 12px 16px;
+            margin: 8px 0;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #495057;
+          }
+          .method {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            margin-right: 10px;
+            font-size: 12px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1>🔍 Funding Opportunities</h1>
+          <div class="subtitle">Search API Service</div>
+          <div class="status">✓ Online</div>
+          
+          <p style="color: #666; line-height: 1.6;">
+            Welcome to the Funding Opportunities Search API. 
+            Use the button below to access the search interface.
+          </p>
+          
+          <a href="https://www.jotform.com/form/252758211486058" class="button">
+            Start Searching →
+          </a>
+          
+          <div class="endpoints">
+            <h3>API Endpoints</h3>
+            <div class="endpoint">
+              <span class="method">GET</span> /health
+            </div>
+            <div class="endpoint">
+              <span class="method">GET</span> /search?keyword=...&discipline=...&funder=...&deadline=...
+            </div>
+            <div class="endpoint">
+              <span class="method">POST</span> /search
+            </div>
+          </div>
+        </div>
+      </body>
+    </html>
+  `);
+});
+
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
@@ -321,5 +450,10 @@ app.post('/search', async (req, res) => {
   await handleSearch(query, limit, res);
 });
 
-app.listen(process.env.PORT || 3000);
+// For Vercel serverless
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});
+
 export default app;
